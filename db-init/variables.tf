@@ -1,29 +1,32 @@
 variable "pod_config" {
   type = object({
-    namespace = optional(string)
+    namespace        = optional(string)
     namespace_create = optional(bool)
-    name = optional(string)
-    annotations = optional(map(string))
-    labels = optional(map(string))
+    name             = optional(string)
+    image            = optional(string)
+    annotations      = optional(map(string))
+    labels           = optional(map(string))
   })
-  default = object({
-    namespace = null
+  default = {
+    namespace        = null
     namespace_create = null
-    name = null
-    annotations = null
-    labels = null
-  })
+    name             = null
+    image            = null
+    annotations      = null
+    labels           = null
+  }
 }
 
 locals {
   pod_config = defaults(var.pod_config, {
-    namespace = "database"
+    namespace        = "db"
     namespace_create = true
-    name = "db-init"
-    annotations = {}
+    name             = "db-init"
+    image            = "alpine:3.12"
+    annotations      = {}
     labels = {
-      "app.kubernetes.io/instance" =
-      "app.kubernetes.io/name" =
+      "app.kubernetes.io/instance" = "alpine"
+      "app.kubernetes.io/name"     = "db-init"
     }
   })
 }
@@ -67,10 +70,10 @@ variable "initdb_script" {
 
 variable "database_engine" {
   type        = string
-  description = "The Name of the database engine"
+  description = "The name of the database engine"
   validation {
     condition     = contains(["postgres", "mysql", "mariadb"], var.database_engine)
-    error_message = "${var.database_engine} engine not supported! Valid engines are: postgres, mysql, mariadb"
+    error_message = "Invalid database_engine provided. Valid engines are: postgres, mysql, mariadb."
   }
 }
 
@@ -89,7 +92,7 @@ locals {
     }
     mysql = {
       client  = "mysql-client"
-      command = "mysql"
+      command = "mysql --user ${var.database_root_credentials.username}"
       env_vars = {
         MYSQL_HOST     = local.database_root_credentials.address
         MYSQL_TCP_PORT = local.database_root_credentials.port

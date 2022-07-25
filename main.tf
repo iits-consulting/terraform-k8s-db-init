@@ -30,4 +30,7 @@ module "db-init" {
       password = random_password.database_passwords[database].result
     }]
   })
+  pod_config = {
+    namespace = "test"
+  }
 }

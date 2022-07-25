@@ -1,22 +1,23 @@
 resource "kubernetes_namespace" "db" {
+  count = local.pod_config.namespace_create ? 1 : 0
   metadata {
     annotations = {
       optimized-by-cce = true
     }
-    name = "database"
+    name = local.pod_config.namespace
   }
 }
 
 resource "kubernetes_pod" "database_init" {
   metadata {
-    name      = local.pod_config.name
-    namespace = kubernetes_namespace.db.metadata[0].name
-    annotations = {}
-    labels = {}
+    name        = local.pod_config.name
+    namespace   = local.pod_config.namespace
+    annotations = local.pod_config.annotations
+    labels      = local.pod_config.labels
   }
   spec {
     container {
-      name    = "db-init"
+      name    = local.pod_config.name
       image   = "alpine:3.12"
       command = ["/bin/sh", "-c"]
       args = [join(" ", [
