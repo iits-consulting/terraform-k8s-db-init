@@ -1,36 +1,47 @@
-locals {
-  databases = [
-    "mordor",
-    "test",
-  ]
-}
-
-resource "random_password" "database_passwords" {
-  for_each = local.databases
-
-  length      = 32
-  special     = false
-  min_lower   = 1
-  min_numeric = 1
-  min_upper   = 1
-}
-
-module "db-init" {
-  source          = "./db-init"
-  database_engine = "postgres"
-  database_root_credentials = {
-    username = "root"
-    password = "root"
-    address  = "localhost"
+resource "kubernetes_namespace" "database" {
+  count = local.pod_config.namespace_create ? 1 : 0
+  metadata {
+    annotations = {
+      optimized-by-cce = true
+    }
+    name = local.pod_config.namespace
   }
-  initdb_script = templatefile("./initdb.sql", {
-    databases = [for database in local.databases : {
-      name     = database
-      username = database
-      password = random_password.database_passwords[database].result
-    }]
-  })
-  pod_config = {
-    namespace = "test"
+}
+
+resource "kubernetes_pod" "database_init" {
+  metadata {
+    name        = local.pod_config.name
+    namespace   = local.pod_config.namespace
+    annotations = local.pod_config.annotations
+    labels      = local.pod_config.labels
+  }
+  spec {
+    container {
+      name    = local.pod_config.name
+      image   = "alpine:3.12"
+      command = ["/bin/sh", "-c"]
+      args = [join(" ", [
+        "apk add --no-cache ${local.db_engines[var.database_engine].client} &&",
+        "${local.db_engines[var.database_engine].command} <<-EOSQL\n${var.initdb_script}\nEOSQL\n",
+        "sleep 3000",
+      ])]
+      dynamic "env" {
+        for_each = local.db_engines[var.database_engine].env_vars
+        content {
+          name  = env.key
+          value = env.value
+        }
+      }
+    }
+    restart_policy = "Never"
+  }
+  lifecycle {
+    ignore_changes = [
+      metadata[0],
+      spec[0].dns_config,
+      spec[0].node_selector,
+      spec[0].container[0].image,
+      spec[0].container[0].volume_mount,
+    ]
   }
 }

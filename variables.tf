@@ -7,27 +7,15 @@ variable "pod_config" {
     annotations      = optional(map(string))
     labels           = optional(map(string))
   })
-  default = {
-    namespace        = null
-    namespace_create = null
-    name             = null
-    image            = null
-    annotations      = null
-    labels           = null
-  }
+  default = null
 }
 
 locals {
   pod_config = defaults(var.pod_config, {
-    namespace        = "db"
+    namespace        = "database"
     namespace_create = true
     name             = "db-init"
     image            = "alpine:3.12"
-    annotations      = {}
-    labels = {
-      "app.kubernetes.io/instance" = "alpine"
-      "app.kubernetes.io/name"     = "db-init"
-    }
   })
 }
 
@@ -58,9 +46,16 @@ locals {
     }
   }
   database_root_credentials = defaults(var.database_root_credentials, {
-    database = local.defaults[var.database_engine].database
-    port     = local.defaults[var.database_engine].port
+    database = ""
+    port = 0
   })
+  root_credentials = {
+    username = local.database_root_credentials.username
+    password = local.database_root_credentials.password
+    address  = local.database_root_credentials.address
+    database = local.database_root_credentials.database == "" ? local.defaults[var.database_engine].database : local.database_root_credentials.database
+    port     = local.database_root_credentials.port  == 0 ? local.defaults[var.database_engine].port : local.database_root_credentials.port
+  }
 }
 
 variable "initdb_script" {
@@ -83,29 +78,29 @@ locals {
       client  = "postgresql-client"
       command = "psql"
       env_vars = {
-        PGHOST     = local.database_root_credentials.address
-        PGPORT     = local.database_root_credentials.port
-        PGDATABASE = local.database_root_credentials.database
-        PGUSER     = local.database_root_credentials.username
-        PGPASSWORD = local.database_root_credentials.password
+        PGHOST     = local.root_credentials.address
+        PGPORT     = local.root_credentials.port
+        PGDATABASE = local.root_credentials.database
+        PGUSER     = local.root_credentials.username
+        PGPASSWORD = local.root_credentials.password
       }
     }
     mysql = {
       client  = "mysql-client"
-      command = "mysql --user ${var.database_root_credentials.username}"
+      command = "mysql --user=${local.root_credentials.username} --password=$MYSQL_PASSWORD"
       env_vars = {
-        MYSQL_HOST     = local.database_root_credentials.address
-        MYSQL_TCP_PORT = local.database_root_credentials.port
-        MYSQL_PASSWORD = local.database_root_credentials.password
+        MYSQL_HOST     = local.root_credentials.address
+        MYSQL_TCP_PORT = local.root_credentials.port
+        MYSQL_PASSWORD = local.root_credentials.password
       }
     }
     mariadb = {
       client  = "mariadb-client"
-      command = "mariadb --user ${var.database_root_credentials.username}"
+      command = "mariadb --user=${local.root_credentials.username} --password=$MYSQL_PASSWORD"
       env_vars = {
-        MYSQL_HOST     = local.database_root_credentials.address
-        MYSQL_TCP_PORT = local.database_root_credentials.port
-        MYSQL_PASSWORD = local.database_root_credentials.password
+        MYSQL_HOST     = local.root_credentials.address
+        MYSQL_TCP_PORT = local.root_credentials.port
+        MYSQL_PASSWORD = local.root_credentials.password
       }
     }
   }
