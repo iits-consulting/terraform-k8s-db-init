@@ -15,7 +15,7 @@ locals {
     namespace        = "database"
     namespace_create = true
     name             = "db-init"
-    image            = "alpine:3.12"
+    image            = "alpine:3.15.5"
   })
 }
 

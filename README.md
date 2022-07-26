@@ -28,7 +28,7 @@ module "db-init" {
     address  = "mydatabase.mydomain.de"
   }
   initdb_script = templatefile("./initdb.sql", { #Path to the SQL Script
-    databases = [for database in local.databases : {# This overrides variables set inside the initdb.sql script
+    databases = [for database in local.databases : {# This populates variables set inside the initdb.sql script
       name     = database
       username = database
       password = random_password.database_passwords[database].result
@@ -38,7 +38,7 @@ module "db-init" {
     namespace = "test"
     namespace_create = true
     name             = "db-init"
-    image            = "alpine:3.12"
+    image            = "alpine:3.15.5"
     annotations      = {}
     labels = {
       "app.kubernetes.io/instance" = "alpine"
