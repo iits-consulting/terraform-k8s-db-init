@@ -1,4 +1,4 @@
-## OTC Cloud Container Engine Terraform module
+## Cloud Container Engine Terraform module
 
 A module for running an initialization SQL script on an existing database server.
 
@@ -6,8 +6,9 @@ A module for running an initialization SQL script on an existing database server
 postgres, mysql, mariadb
 
 #### Limitations:
-Setting pod annotations/labels only works when creating the pod for the first time.
-Updating annotations/labels after pod creation requires recreation of the pod.
+Setting pod annotations/labels through this module only works when creating the pod for the first time.
+Pod annotations and labels are listed in **lifecycle.ignorechanges** list inside the **kubernetes_pod** ressource.
+An update on pod annotations/labels after creation is only possible via recreation (taint, destroy, etc...).
 
 Usage example
 ```hcl
@@ -20,7 +21,7 @@ locals {
 }
 
 module "db-init" {
-  source          = "https://github.com/iits-consulting/terraform-k8s-db-init"
+  source          = "registry.terraform.io/iits-consulting/terraform-k8s-db-init"
   database_engine = "postgres"
   database_root_credentials = {
     username = "root"
@@ -35,7 +36,7 @@ module "db-init" {
     }]
   })
   pod_config = {
-    namespace = "test"
+    namespace = "database"
     namespace_create = true
     name             = "db-init"
     image            = "alpine:3.15.5"
