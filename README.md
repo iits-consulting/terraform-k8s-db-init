@@ -21,7 +21,7 @@ locals {
 }
 
 module "db-init" {
-  source          = "registry.terraform.io/iits-consulting/terraform-k8s-db-init"
+  source          = "registry.terraform.io/iits-consulting/terraform-kubernetes-db-init"
   database_engine = "postgres"
   database_root_credentials = {
     username = "root"
