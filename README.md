@@ -1,4 +1,4 @@
-## Cloud Container Engine Terraform module
+## Kubernetes Cloud Container Engine Terraform module
 
 A module for running an initialization SQL script on an existing database server.
 
