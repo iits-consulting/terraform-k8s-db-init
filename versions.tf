@@ -7,7 +7,4 @@ terraform {
       source = "hashicorp/random"
     }
   }
-  experiments = [
-    module_variable_optional_attrs,
-  ]
 }
