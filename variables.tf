@@ -1,22 +1,14 @@
+
 variable "pod_config" {
   type = object({
-    namespace        = optional(string)
-    namespace_create = optional(bool)
-    name             = optional(string)
-    image            = optional(string)
+    namespace        = optional(string, "database")
+    namespace_create = optional(bool, true)
+    name             = optional(string, "db-init")
+    image            = optional(string, "alpine:3.15.5")
     annotations      = optional(map(string))
     labels           = optional(map(string))
   })
   default = null
-}
-
-locals {
-  pod_config = defaults(var.pod_config, {
-    namespace        = "database"
-    namespace_create = true
-    name             = "db-init"
-    image            = "alpine:3.15.5"
-  })
 }
 
 variable "database_root_credentials" {
@@ -24,8 +16,8 @@ variable "database_root_credentials" {
     username = string
     password = string
     address  = string
-    port     = optional(number)
-    database = optional(string)
+    port     = optional(number, 0)
+    database = optional(string, "")
   })
   description = "Database root access credentials."
 }
@@ -45,10 +37,8 @@ locals {
       database = "mysql"
     }
   }
-  database_root_credentials = defaults(var.database_root_credentials, {
-    database = ""
-    port = 0
-  })
+  database_root_credentials = var.database_root_credentials
+
   root_credentials = {
     username = local.database_root_credentials.username
     password = local.database_root_credentials.password
@@ -105,4 +95,5 @@ locals {
     }
   }
 }
+
 

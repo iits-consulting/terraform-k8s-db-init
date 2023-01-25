@@ -1,23 +1,24 @@
+
 resource "kubernetes_namespace" "database" {
-  count = local.pod_config.namespace_create ? 1 : 0
+  count = var.pod_config.namespace_create ? 1 : 0
   metadata {
     annotations = {
       optimized-by-cce = true
     }
-    name = local.pod_config.namespace
+    name = var.pod_config.namespace
   }
 }
 
 resource "kubernetes_pod" "database_init" {
   metadata {
-    name        = local.pod_config.name
-    namespace   = local.pod_config.namespace
-    annotations = local.pod_config.annotations
-    labels      = local.pod_config.labels
+    name        = var.pod_config.name
+    namespace   = var.pod_config.namespace
+    annotations = var.pod_config.annotations
+    labels      = var.pod_config.labels
   }
   spec {
     container {
-      name    = local.pod_config.name
+      name    = var.pod_config.name
       image   = "alpine:3.12"
       command = ["/bin/sh", "-c"]
       args = [join(" ", [
@@ -45,3 +46,4 @@ resource "kubernetes_pod" "database_init" {
     ]
   }
 }
+
