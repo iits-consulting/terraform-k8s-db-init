@@ -1,3 +1,7 @@
+# Deprecated
+
+We switched over using this helm chart here: https://github.com/iits-consulting/charts/tree/main/charts/db-init
+
 ## Kubernetes Cloud Container Engine Terraform module
 
 A module for running an initialization SQL script on an existing database server.
